@@ -56,8 +56,13 @@ function Dashboard() {
         
       } catch (err: any) {
         console.error(err);
-        alert("분석 중 오류 발생: " + err.message);
-        dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'idle' } }));
+        let errorMsg = err.message || String(err);
+        if (err.name === 'TypeError' || errorMsg.toLowerCase().includes('fetch')) {
+          errorMsg = "네트워크 오류 또는 API 권한 문제(Failed to fetch)일 수 있습니다. 발급받은 키의 권한을 확인해주세요. 상세: " + errorMsg;
+        }
+        
+        dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'gap_found' } }));
+        dispatch(updateNodeRecommendation({ id: node.id, chunk: `\n\n🚨 [분석 중 오류 발생]\n${errorMsg}` }));
       }
     }
   };

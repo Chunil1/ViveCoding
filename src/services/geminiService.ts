@@ -6,8 +6,9 @@ export class GeminiService {
   private apiKey: string = '';
 
   setApiKey(key: string) {
-    this.apiKey = key;
-    this.genAI = new GoogleGenerativeAI(key);
+    // API keys should only contain standard ASCII characters. Remove hidden unicode or whitespace string to prevent Headers.append TypeError.
+    this.apiKey = key.trim().replace(/[^\x20-\x7E]/g, '');
+    this.genAI = new GoogleGenerativeAI(this.apiKey);
   }
 
   hasApiKey() {
@@ -19,8 +20,8 @@ export class GeminiService {
       throw new Error("API Key is not set.");
     }
 
-    // Usually use 'gemini-1.5-pro' or 'gemini-1.5-flash' for latest models.
-    const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Use gemini-1.5-pro or gemini-pro if flash returns 404 in some regions/keys
+    const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const prompt = `
 당신은 금융 규제 및 IT 보안 거버넌스 전문가인 레그테크(Reg-Tech) 어시스턴트입니다.
@@ -39,8 +40,12 @@ ${internalGuideline}
     const result = await model.generateContentStream(prompt);
 
     for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      yield chunkText;
+      try {
+        const chunkText = chunk.text();
+        if (chunkText) yield chunkText;
+      } catch (e) {
+        console.warn("Error parsing chunk text, possibly safety blocked:", e);
+      }
     }
   }
 }

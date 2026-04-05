@@ -1,15 +1,15 @@
 import { useState, useRef } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Card, Text, Title, Button, TextInput } from '@tremor/react';
 import { setUploadedGuideline, setApiKey } from '../store/mappingSlice';
 
 export default function Uploader() {
   const [dragActive, setDragActive] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
-  const [localApiKey, setLocalApiKey] = useState('');
-  
-  const inputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
+  const geminiApiKey = useSelector((state: any) => state.mapping.geminiApiKey);
+  const [localApiKey, setLocalApiKey] = useState(geminiApiKey || '');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();

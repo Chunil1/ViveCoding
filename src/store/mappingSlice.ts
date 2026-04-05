@@ -39,28 +39,47 @@ const initialNodes: Node[] = [
   {
     id: 'external-3',
     type: 'custom',
-    data: { title: '신용정보법', content: '신용정보 이용 및 보호에 관한 법률 제19조', category: 'external' },
+    data: { title: '신용정보법', content: '신용정보 이용 및 보호에 관한 법률 제19조 (신용정보의 안전성 확보 등)', category: 'external' },
     position: { x: 50, y: 550 },
+  },
+  {
+    id: 'external-4',
+    type: 'custom',
+    data: { title: '전자금융거래법', content: '전자금융거래법 제21조 (안전성의 확보의무)', category: 'external' },
+    position: { x: 50, y: 800 },
+  },
+  {
+    id: 'external-5',
+    type: 'custom',
+    data: { title: '클라우드 가이드', content: '금융권 클라우드 컴퓨팅 이용 가이드라인 (보안성 검토 및 보고 의무)', category: 'external' },
+    position: { x: 50, y: 1050 },
   },
   {
     id: 'internal-1',
     type: 'custom',
-    data: { title: '내부 지침', content: '정보보안 기본지침 제2-1조 (접근통제 및 악성코드 방지)', category: 'internal' },
+    data: { title: '정보보안 기본지침', content: '정보보안 기본지침 제2-1조 (접근통제 및 보안서약)', category: 'internal' },
     position: { x: 550, y: 50 },
   },
   {
     id: 'internal-2',
     type: 'custom',
-    data: { title: '고객 데이터 보관지침', content: '개인정보처리방침 제4조 (물리적 접근 방어)', category: 'internal' },
+    data: { title: '데이터 보관지침', content: '개인정보처리방침 제4조 (물리적 접근 방어)', category: 'internal' },
     position: { x: 550, y: 300 },
+  },
+  {
+    id: 'internal-3',
+    type: 'custom',
+    data: { title: '외부 인프라 도입규정', content: 'IT 외부 인프라 도입 지침 제10조 (SaaS 도입)', category: 'internal' },
+    position: { x: 550, y: 1050 },
   },
 ];
 
 const initialEdges: Edge[] = [
   { id: 'e1-i1', source: 'external-1', target: 'internal-1', animated: true, style: { stroke: '#3b82f6' } },
-  { id: 'e2-i1', source: 'external-2', target: 'internal-1', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e4-i1', source: 'external-4', target: 'internal-1', animated: true, style: { stroke: '#3b82f6' } },
   { id: 'e2-i2', source: 'external-2', target: 'internal-2', animated: true, style: { stroke: '#3b82f6' } },
   { id: 'e3-i2', source: 'external-3', target: 'internal-2', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e5-i3', source: 'external-5', target: 'internal-3', animated: true, style: { stroke: '#3b82f6' } },
 ];
 
 const initialState: MappingState = {
@@ -69,7 +88,7 @@ const initialState: MappingState = {
   complianceScore: 87.5,
   lastUpdated: new Date().toISOString(),
   uploadedGuideline: null,
-  geminiApiKey: '',
+  geminiApiKey: typeof window !== 'undefined' ? localStorage.getItem('geminiApiKey') || '' : '',
   selectedNodeId: null,
   analysisState: {},
 };
@@ -93,6 +112,9 @@ export const mappingSlice = createSlice({
     },
     setApiKey: (state, action: PayloadAction<string>) => {
       state.geminiApiKey = action.payload;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('geminiApiKey', action.payload);
+      }
     },
     setSelectedNodeId: (state, action: PayloadAction<string | null>) => {
       state.selectedNodeId = action.payload;
