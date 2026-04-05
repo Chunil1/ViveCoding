@@ -55,6 +55,18 @@ const initialNodes: Node[] = [
     position: { x: 50, y: 1050 },
   },
   {
+    id: 'external-6',
+    type: 'custom',
+    data: { title: '전자문서기본법', content: '전자문서 및 전자거래 기본법 제5조 (전자문서의 보관)', category: 'external' },
+    position: { x: 50, y: 1300 },
+  },
+  {
+    id: 'external-7',
+    type: 'custom',
+    data: { title: '망분리 가이드', content: '금융권 망분리 규제 완화 가이드라인 (예외 허용 및 통제 방안)', category: 'external' },
+    position: { x: 50, y: 1550 },
+  },
+  {
     id: 'internal-1',
     type: 'custom',
     data: { title: '정보보안 기본지침', content: '정보보안 기본지침 제2-1조 (접근통제 및 보안서약)', category: 'internal' },
@@ -80,6 +92,8 @@ const initialEdges: Edge[] = [
   { id: 'e2-i2', source: 'external-2', target: 'internal-2', animated: true, style: { stroke: '#3b82f6' } },
   { id: 'e3-i2', source: 'external-3', target: 'internal-2', animated: true, style: { stroke: '#3b82f6' } },
   { id: 'e5-i3', source: 'external-5', target: 'internal-3', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e6-i3', source: 'external-6', target: 'internal-3', animated: true, style: { stroke: '#3b82f6' } },
+  { id: 'e7-i1', source: 'external-7', target: 'internal-1', animated: true, style: { stroke: '#3b82f6' } },
 ];
 
 const initialState: MappingState = {

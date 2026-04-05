@@ -10,13 +10,19 @@ import { geminiService } from './services/geminiService';
 
 function Dashboard() {
   const dispatch = useDispatch<AppDispatch>();
-  const complianceScore = useSelector((state: RootState) => state.mapping.complianceScore);
-  const lastUpdated = useSelector((state: RootState) => state.mapping.lastUpdated);
   const uploadedGuideline = useSelector((state: RootState) => state.mapping.uploadedGuideline);
   const geminiApiKey = useSelector((state: RootState) => state.mapping.geminiApiKey);
   const selectedNodeId = useSelector((state: RootState) => state.mapping.selectedNodeId);
   const nodes = useSelector((state: RootState) => state.mapping.nodes);
   const edges = useSelector((state: RootState) => state.mapping.edges);
+  const analysisState = useSelector((state: RootState) => state.mapping.analysisState);
+
+  const internalNodes = nodes.filter(n => n.data.category === 'internal');
+  const totalInternal = internalNodes.length;
+  // Calculate dynamic score
+  const gapsCount = internalNodes.filter(n => analysisState[n.id]?.status === 'gap_found').length;
+  const isAnalyzed = internalNodes.some(n => analysisState[n.id]);
+  const dynamicScore = isAnalyzed ? Math.max(0, Math.round(((totalInternal - gapsCount) / totalInternal) * 100)) : 100;
 
   const startAnalysis = async () => {
     if (!geminiApiKey || !uploadedGuideline) {
@@ -95,15 +101,21 @@ function Dashboard() {
             <Uploader />
           </div>
 
-          <Card className="flex-shrink-0">
+          <Card className="flex-shrink-0 shadow-md decoration-emerald-500" decoration="top">
             <Title>규정 준수율 (Compliance)</Title>
             <Flex alignItems="center" className="mt-4">
-              <ProgressCircle value={complianceScore} size="xl" color={complianceScore > 80 ? 'emerald' : 'yellow'}>
-                <span className="text-lg font-medium text-slate-700">{Math.round(complianceScore)}%</span>
+              <ProgressCircle value={dynamicScore} size="xl" color={dynamicScore === 100 ? 'emerald' : 'rose'}>
+                <span className={`text-lg font-bold ${dynamicScore === 100 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                  {isAnalyzed ? `${dynamicScore}%` : '대기'}
+                </span>
               </ProgressCircle>
               <div className="ml-4">
-                <Metric>{Math.round(complianceScore)}%</Metric>
-                <Text className="text-xs text-slate-400 mt-1">{new Date(lastUpdated).toLocaleTimeString()}</Text>
+                <Metric className={dynamicScore === 100 ? 'text-emerald-700' : 'text-rose-600'}>
+                  {isAnalyzed ? `${dynamicScore}점` : '미분석'}
+                </Metric>
+                <Text className="text-xs text-slate-400 mt-1">
+                  {isAnalyzed ? `${gapsCount}개 조항 위반 발견` : '분석을 시작해주세요'}
+                </Text>
               </div>
             </Flex>
           </Card>
@@ -116,13 +128,14 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* Right Sidebar (Review Panel) */}
-        {selectedNodeId && (
-          <div className="w-96 flex-shrink-0 transition-transform transform translate-x-0">
-             <ReviewPanel />
-          </div>
-        )}
       </div>
+
+      {/* Full Page Overlay for Redlining Review */}
+      {selectedNodeId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-10 bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <ReviewPanel />
+        </div>
+      )}
     </div>
   );
 }
