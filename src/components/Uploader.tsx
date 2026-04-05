@@ -7,8 +7,6 @@ export default function Uploader() {
   const [dragActive, setDragActive] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const dispatch = useDispatch();
-  const geminiApiKey = useSelector((state: any) => state.mapping.geminiApiKey);
-  const [localApiKey, setLocalApiKey] = useState(geminiApiKey || '');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -88,25 +86,6 @@ export default function Uploader() {
             <Text className="text-slate-500 mt-1">클릭하여 선택하세요</Text>
           </div>
         )}
-      </div>
-
-      <div className="mt-4 pt-4 border-t border-slate-200">
-        <Text className="text-xs mb-2">Gemini API Key (로컬 시연용)</Text>
-        <div className="flex gap-2">
-          <TextInput 
-            type="password" 
-            placeholder="AI Key를 입력해주세요" 
-            value={localApiKey}
-            onChange={(e) => setLocalApiKey(e.target.value)}
-          />
-          <Button 
-            size="xs" 
-            onClick={() => dispatch(setApiKey(localApiKey))}
-            disabled={!localApiKey}
-          >
-            적용
-          </Button>
-        </div>
       </div>
     </Card>
   );

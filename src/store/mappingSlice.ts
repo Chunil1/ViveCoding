@@ -88,7 +88,7 @@ const initialState: MappingState = {
   complianceScore: 87.5,
   lastUpdated: new Date().toISOString(),
   uploadedGuideline: null,
-  geminiApiKey: typeof window !== 'undefined' ? localStorage.getItem('geminiApiKey') || '' : '',
+  geminiApiKey: 'AIzaSyDjORiZ9o6W--WMT2G-6TttlrlP5cmN3vo',
   selectedNodeId: null,
   analysisState: {},
 };

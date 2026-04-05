@@ -20,8 +20,8 @@ export class GeminiService {
       throw new Error("API Key is not set.");
     }
 
-    // Use gemini-1.5-pro or gemini-pro if flash returns 404 in some regions/keys
-    const model = this.genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    // Use the universally supported gemini-pro (1.0) model due to 404 fallback issues
+    const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
 
     const prompt = `
 당신은 금융 규제 및 IT 보안 거버넌스 전문가인 레그테크(Reg-Tech) 어시스턴트입니다.

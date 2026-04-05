@@ -70,18 +70,20 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-50 p-6 flex flex-col">
       {/* Header Area */}
-      <div className="mb-6 flex justify-between items-end border-b border-slate-200 pb-4">
-        <div>
-          <Title className="text-3xl font-bold text-slate-900">Lex-Link Dashboard</Title>
-          <Subtitle className="text-slate-500">외부 규제 및 내부 지침 통합 분석 시스템 (Redlining)</Subtitle>
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-200 pb-4 gap-4 w-full">
+        <div className="flex-1 min-w-0">
+          <Title className="text-3xl font-bold text-slate-900 truncate">Lex-Link Dashboard</Title>
+          <Subtitle className="text-slate-500 truncate">외부 규제 및 내부 지침 통합 분석 시스템 (Redlining)</Subtitle>
         </div>
-        <Button 
-          size="lg" 
-          disabled={!geminiApiKey || !uploadedGuideline}
-          onClick={startAnalysis}
-        >
-          AI Gap 분석 시작
-        </Button>
+        <div className="flex-shrink-0">
+          <Button 
+            size="lg" 
+            disabled={!geminiApiKey || !uploadedGuideline}
+            onClick={startAnalysis}
+          >
+            AI Gap 분석 시작
+          </Button>
+        </div>
       </div>
 
       {/* Main Content Area */}
