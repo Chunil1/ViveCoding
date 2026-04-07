@@ -21,7 +21,21 @@ interface MappingState {
   geminiApiKey: string;
   selectedNodeId: string | null;
   analysisState: Record<string, NodeAnalysis>;
+  isGlobalAnalyzing: boolean;
 }
+
+const loadPersistedState = () => {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const raw = localStorage.getItem('lexLinkReport');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.error('Failed to load local storage state:', e);
+  }
+  return undefined;
+};
+
+const persisted = loadPersistedState();
 
 const initialNodes: Node[] = [
   {
@@ -97,14 +111,15 @@ const initialEdges: Edge[] = [
 ];
 
 const initialState: MappingState = {
-  nodes: initialNodes,
-  edges: initialEdges,
-  complianceScore: 87.5,
-  lastUpdated: new Date().toISOString(),
-  uploadedGuideline: null,
+  nodes: persisted?.nodes || initialNodes,
+  edges: persisted?.edges || initialEdges,
+  complianceScore: persisted?.complianceScore || 87.5,
+  lastUpdated: persisted?.lastUpdated || new Date().toISOString(),
+  uploadedGuideline: persisted?.uploadedGuideline || null,
   geminiApiKey: 'AIzaSyDjORiZ9o6W--WMT2G-6TttlrlP5cmN3vo',
   selectedNodeId: null,
-  analysisState: {},
+  analysisState: persisted?.analysisState || {},
+  isGlobalAnalyzing: false,
 };
 
 export const mappingSlice = createSlice({
@@ -155,6 +170,9 @@ export const mappingSlice = createSlice({
       state.selectedNodeId = null;
       state.complianceScore = Math.min(100, state.complianceScore + 12.5); // Example score boost
       state.lastUpdated = new Date().toISOString();
+    },
+    setGlobalAnalyzing: (state, action: PayloadAction<boolean>) => {
+      state.isGlobalAnalyzing = action.payload;
     }
   },
 });
@@ -162,7 +180,8 @@ export const mappingSlice = createSlice({
 export const { 
   setNodes, setEdges, updateComplianceScore, 
   setUploadedGuideline, setApiKey, setSelectedNodeId,
-  setNodeAnalysisStatus, updateNodeRecommendation, resolveNodeMapping
+  setNodeAnalysisStatus, updateNodeRecommendation, resolveNodeMapping,
+  setGlobalAnalyzing
 } = mappingSlice.actions;
 
 export default mappingSlice.reducer;

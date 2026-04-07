@@ -5,7 +5,7 @@ import type { RootState, AppDispatch } from './store';
 import MappingGraph from './components/MappingGraph';
 import Uploader from './components/Uploader';
 import ReviewPanel from './components/ReviewPanel';
-import { setNodeAnalysisStatus, updateNodeRecommendation, setSelectedNodeId } from './store/mappingSlice';
+import { setNodeAnalysisStatus, updateNodeRecommendation, setSelectedNodeId, setGlobalAnalyzing } from './store/mappingSlice';
 import { geminiService } from './services/geminiService';
 
 function Dashboard() {
@@ -16,6 +16,7 @@ function Dashboard() {
   const nodes = useSelector((state: RootState) => state.mapping.nodes);
   const edges = useSelector((state: RootState) => state.mapping.edges);
   const analysisState = useSelector((state: RootState) => state.mapping.analysisState);
+  const isGlobalAnalyzing = useSelector((state: RootState) => state.mapping.isGlobalAnalyzing);
 
   const internalNodes = nodes.filter(n => n.data.category === 'internal');
   const totalInternal = internalNodes.length;
@@ -35,41 +36,46 @@ function Dashboard() {
     // 내부 규정들(internal)에 대해 외부 규정(mapped)을 바탕으로 분석 시작
     const internalNodes = nodes.filter(n => n.data.category === 'internal');
     
-    for (const node of internalNodes) {
-      // 해당 노드에 연결된 외부 규정 찾기
-      const linkedEdges = edges.filter(e => e.target === node.id);
-      if (linkedEdges.length === 0) continue;
+    dispatch(setGlobalAnalyzing(true));
+    try {
+      for (const node of internalNodes) {
+        // 해당 노드에 연결된 외부 규정 찾기
+        const linkedEdges = edges.filter(e => e.target === node.id);
+        if (linkedEdges.length === 0) continue;
 
-      const externalNode = nodes.find(n => n.id === linkedEdges[0].source);
-      if (!externalNode) continue;
+        const externalNode = nodes.find(n => n.id === linkedEdges[0].source);
+        if (!externalNode) continue;
 
-      dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'analyzing' } }));
-      
-      try {
-        const stream = geminiService.streamComplianceCheck(
-          String(externalNode.data.content),
-          uploadedGuideline.content
-        );
-
-        dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'gap_found', recommendation: '' } }));
-
-        for await (const chunk of stream) {
-          dispatch(updateNodeRecommendation({ id: node.id, chunk }));
-        }
-
-        // 스트리밍이 끝나면 자동 선택하여 사용자에게 확인시키기 (데모 목적)
-        dispatch(setSelectedNodeId(node.id));
+        dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'analyzing' } }));
         
-      } catch (err: any) {
-        console.error(err);
-        let errorMsg = err.message || String(err);
-        if (err.name === 'TypeError' || errorMsg.toLowerCase().includes('fetch')) {
-          errorMsg = "네트워크 오류 또는 API 권한 문제(Failed to fetch)일 수 있습니다. 발급받은 키의 권한을 확인해주세요. 상세: " + errorMsg;
+        try {
+          const stream = geminiService.streamComplianceCheck(
+            String(externalNode.data.content),
+            uploadedGuideline.content
+          );
+
+          dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'gap_found', recommendation: '' } }));
+
+          for await (const chunk of stream) {
+            dispatch(updateNodeRecommendation({ id: node.id, chunk }));
+          }
+
+          // 스트리밍이 끝나면 자동 선택하여 사용자에게 확인시키기 (데모 목적)
+          dispatch(setSelectedNodeId(node.id));
+          
+        } catch (err: any) {
+          console.error(err);
+          let errorMsg = err.message || String(err);
+          if (err.name === 'TypeError' || errorMsg.toLowerCase().includes('fetch')) {
+            errorMsg = "네트워크 오류 또는 API 권한 문제(Failed to fetch)일 수 있습니다. 발급받은 키의 권한을 확인해주세요. 상세: " + errorMsg;
+          }
+          
+          dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'gap_found' } }));
+          dispatch(updateNodeRecommendation({ id: node.id, chunk: `\n\n🚨 [분석 중 오류 발생]\n${errorMsg}` }));
         }
-        
-        dispatch(setNodeAnalysisStatus({ id: node.id, analysis: { status: 'gap_found' } }));
-        dispatch(updateNodeRecommendation({ id: node.id, chunk: `\n\n🚨 [분석 중 오류 발생]\n${errorMsg}` }));
       }
+    } finally {
+      dispatch(setGlobalAnalyzing(false));
     }
   };
 
@@ -131,9 +137,22 @@ function Dashboard() {
       </div>
 
       {/* Full Page Overlay for Redlining Review */}
-      {selectedNodeId && (
+      {selectedNodeId && !isGlobalAnalyzing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-10 bg-slate-900/60 backdrop-blur-sm transition-opacity">
           <ReviewPanel />
+        </div>
+      )}
+
+      {/* Full Screen Global Loading Overlay */}
+      {isGlobalAnalyzing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md transition-opacity">
+           <div className="flex flex-col items-center justify-center space-y-6">
+              <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
+              <div className="text-center">
+                <Text className="text-xl font-medium text-white">전체 규정 심층 분석 중...</Text>
+                <Text className="text-sm text-slate-300 mt-2">입력된 수십 개의 조항과 갭(Gap)을 실시간으로 매핑하고 분석하고 있습니다.</Text>
+              </div>
+           </div>
         </div>
       )}
     </div>
